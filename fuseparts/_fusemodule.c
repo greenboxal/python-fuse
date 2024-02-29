@@ -683,14 +683,14 @@ read_func(const char *path, char *buf, size_t s, off_t off)
 	if(PyObject_CheckBuffer(v)) {
 		PyObject_GetBuffer(v, &buffer, PyBUF_SIMPLE);
 
-		if(buffer.len <= s) {
+		if(buffer.len <= (Py_ssize_t)s) {
 			memcpy(buf, buffer.buf, buffer.len);
 			ret = buffer.len;
 		}
 
 		PyBuffer_Release(&buffer);
 	} else if(PyBytes_Check(v)) {
-		if(PyBytes_Size(v) > s)
+		if(PyBytes_Size(v) > (Py_ssize_t)s)
 			goto OUT_DECREF;
 		memcpy(buf, PyBytes_AsString(v), PyBytes_Size(v));
 		ret = PyBytes_Size(v);
@@ -944,7 +944,7 @@ getxattr_func(const char *path, const char *name, char *value, size_t size)
         /* If the size of the value buffer is too small to hold the result,  errno
          * is set to ERANGE.
          */
-		if (PyString_Size(v) > size) {
+		if (PyString_Size(v) > (Py_ssize_t)size) {
             ret = -ERANGE;
 			goto OUT_DECREF;
         }
@@ -994,7 +994,7 @@ listxattr_func(const char *path, char *list, size_t size)
 		}
 
 		ilen = PyString_Size(w);
-		if (lx - list + ilen >= size) {
+		if (lx - list + ilen >= (Py_ssize_t)size) {
 			Py_DECREF(w);
 			break;
 		}
@@ -1302,7 +1302,6 @@ pyfuse_loop_mt(struct fuse *f)
 #ifdef WITH_THREAD
 	PyThreadState *save;
 
-	PyEval_InitThreads();
 	interp = PyThreadState_Get()->interp;
 	save = PyEval_SaveThread();
 	err = fuse_loop_mt(f);
@@ -1402,10 +1401,10 @@ Fuse_main(PyObject *self, PyObject *args, PyObject *kw)
 	DO_ONE_ATTR(statfs);
 	DO_ONE_ATTR(fsync);
 	DO_ONE_ATTR(flush);
-	DO_ONE_ATTR(getxattr);
-	DO_ONE_ATTR(listxattr);
-	DO_ONE_ATTR(setxattr);
-	DO_ONE_ATTR(removexattr);
+	//DO_ONE_ATTR(getxattr);
+	//DO_ONE_ATTR(listxattr);
+	//DO_ONE_ATTR(setxattr);
+	//DO_ONE_ATTR(removexattr);
 #if FUSE_VERSION >= 25
 	DO_ONE_ATTR(ftruncate);
 	DO_ONE_ATTR(fgetattr);
